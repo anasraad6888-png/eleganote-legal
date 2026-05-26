@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Eleganote — elegant note-taking with handwriting, audio, and optional cloud backup.">
+  <title>Eleganote</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #faf9f7;
+      --surface: #ffffff;
+      --text: #1a1a1a;
+      --muted: #5c5c5c;
+      --accent: #2563eb;
+      --border: #e5e2dc;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111111;
+        --surface: #1a1a1a;
+        --text: #f5f5f5;
+        --muted: #a3a3a3;
+        --accent: #60a5fa;
+        --border: #2e2e2e;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      padding: 2rem 1.5rem;
+      text-align: center;
+    }
+    .card {
+      max-width: 520px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+    }
+    h1 {
+      font-size: 2.25rem;
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.02em;
+    }
+    p {
+      color: var(--muted);
+      line-height: 1.6;
+      margin: 0 0 1.5rem;
+    }
+    nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    a.button {
+      display: inline-block;
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    a.button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    footer {
+      margin-top: 2rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Eleganote</h1>
+    <p>
+      Elegant note-taking with handwriting, shapes, audio, and optional cloud backup to Google Drive or Dropbox.
+    </p>
+    <nav>
+      <a class="button primary" href="privacy.html">Privacy Policy</a>
+    </nav>
+  </div>
+  <footer>© 2026 Eleganote</footer>
+</body>
+</html>
