@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Eleganote — elegant note-taking with handwriting, audio, and optional cloud backup.">
-  <title>Eleganote</title>
+  <meta name="description" content="Eleganote — elegant note-taking with handwriting, audio, shapes, and optional cloud backup.">
+  <title>Eleganote — Note-taking app</title>
   <style>
     :root {
       color-scheme: light dark;
@@ -28,45 +28,110 @@
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: var(--text);
       background: var(--bg);
-      padding: 2rem 1.5rem;
-      text-align: center;
+      line-height: 1.65;
     }
-    .card {
-      max-width: 520px;
+    header, main, footer {
+      max-width: 720px;
+      margin: 0 auto;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+    header {
+      padding-top: 2.5rem;
+      padding-bottom: 1rem;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+    h1 {
+      font-size: clamp(2rem, 5vw, 2.75rem);
+      line-height: 1.15;
+      margin: 0 0 0.75rem;
+      letter-spacing: -0.03em;
+    }
+    .lead {
+      color: var(--muted);
+      font-size: 1.1rem;
+      margin: 0;
+    }
+    main { padding-bottom: 3rem; }
+    section {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 2.5rem 2rem;
+      padding: 1.5rem 1.25rem;
+      margin-top: 1rem;
     }
-    h1 {
-      font-size: 2.25rem;
-      margin: 0 0 0.5rem;
-      letter-spacing: -0.02em;
+    h2 {
+      font-size: 1.05rem;
+      margin: 0 0 0.75rem;
     }
-    p {
+    p { margin: 0 0 1rem; color: var(--muted); }
+    p:last-child { margin-bottom: 0; }
+    ul {
+      margin: 0;
+      padding-left: 1.2rem;
       color: var(--muted);
-      line-height: 1.6;
-      margin: 0 0 1.5rem;
     }
-    nav {
+    li { margin: 0.35rem 0; }
+    .platforms {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .platforms span {
+      font-size: 0.85rem;
+      padding: 0.35rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--text);
+    }
+    .stores {
+      display: grid;
       gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    .store {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 1rem;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .store strong { color: var(--text); }
+    .soon {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    nav.links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
     }
     a.button {
       display: inline-block;
-      padding: 0.75rem 1.25rem;
+      padding: 0.7rem 1.1rem;
       border-radius: 10px;
       text-decoration: none;
       font-weight: 600;
+      font-size: 0.95rem;
       border: 1px solid var(--border);
       color: var(--text);
     }
@@ -76,22 +141,90 @@
       color: #fff;
     }
     footer {
-      margin-top: 2rem;
+      padding-bottom: 2.5rem;
       color: var(--muted);
-      font-size: 0.85rem;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+    footer a { color: var(--accent); }
+    .ar {
+      direction: rtl;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Arabic", Tahoma, sans-serif;
     }
   </style>
 </head>
 <body>
-  <div class="card">
+  <header>
+    <div class="badge">Note-taking app</div>
     <h1>Eleganote</h1>
-    <p>
-      Elegant note-taking with handwriting, shapes, audio, and optional cloud backup to Google Drive or Dropbox.
+    <p class="lead">
+      Elegant notes with handwriting, shapes, audio, and optional cloud backup — designed for iOS, Android, macOS, Windows, and Linux.
     </p>
-    <nav>
-      <a class="button primary" href="privacy.html">Privacy Policy</a>
-    </nav>
-  </div>
-  <footer>© 2026 Eleganote</footer>
+  </header>
+
+  <main>
+    <section>
+      <h2>What is Eleganote?</h2>
+      <p>
+        Eleganote is a note-taking application for writing, drawing, organizing documents, and keeping your work on your device by default.
+        You can optionally connect Google Drive or Dropbox to store encrypted backup ZIP files in a dedicated folder named
+        <strong>Eleganote Backups</strong>.
+      </p>
+      <ul>
+        <li>Handwriting, shapes, text, tables, and images</li>
+        <li>Audio notes with optional recording</li>
+        <li>Local-first storage — your notes stay on your device</li>
+        <li>Optional cloud backup to Google Drive or Dropbox</li>
+        <li>Export and share notes as PDF or backup archives</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Platforms</h2>
+      <div class="platforms">
+        <span>iOS</span>
+        <span>Android</span>
+        <span>macOS</span>
+        <span>Windows</span>
+        <span>Linux</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Download</h2>
+      <p>Store listings will be published when the app is ready for public release.</p>
+      <div class="stores">
+        <div class="store">
+          <span><strong>Apple App Store</strong></span>
+          <span class="soon">Coming soon</span>
+        </div>
+        <div class="store">
+          <span><strong>Google Play</strong></span>
+          <span class="soon">Coming soon</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Legal &amp; contact</h2>
+      <nav class="links">
+        <a class="button primary" href="privacy.html">Privacy Policy</a>
+        <a class="button" href="mailto:anasraad6888@gmail.com">Contact</a>
+      </nav>
+    </section>
+
+    <section class="ar">
+      <h2>ما هو Eleganote؟</h2>
+      <p>
+        تطبيق ملاحظات للكتابة والرسم وتنظيم المستندات. بياناتك تبقى على جهازك افتراضياً،
+        ويمكنك اختيارياً ربط Google Drive أو Dropbox لحفظ نسخ احتياطية في مجلد
+        <strong>Eleganote Backups</strong>.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    © 2026 Eleganote · <a href="privacy.html">Privacy Policy</a>
+  </footer>
 </body>
 </html>
