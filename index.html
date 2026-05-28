@@ -3,228 +3,480 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Eleganote — elegant note-taking with handwriting, audio, shapes, and optional cloud backup.">
-  <title>Eleganote — Note-taking app</title>
+  <meta name="description" content="Eleganote — elegant note-taking with handwriting, shapes, audio, and optional cloud backup. Available on iOS, Android, macOS, Windows, and Linux.">
+  <meta name="theme-color" content="#f7f4ef">
+  <meta property="og:title" content="Eleganote — Elegant Note-Taking">
+  <meta property="og:description" content="Handwriting, shapes, audio notes, and optional cloud backup. Your notes stay on your device by default.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/icon-512.png">
+  <title>Eleganote — Elegant Note-Taking</title>
+  <link rel="icon" href="assets/icon-512.png" type="image/png">
   <style>
     :root {
       color-scheme: light dark;
-      --bg: #faf9f7;
+      --bg: #f7f4ef;
+      --bg-accent: #ede8df;
       --surface: #ffffff;
-      --text: #1a1a1a;
-      --muted: #5c5c5c;
-      --accent: #2563eb;
-      --border: #e5e2dc;
+      --text: #1c1917;
+      --muted: #57534e;
+      --accent: #2c4a6e;
+      --accent-soft: #dbeafe;
+      --border: #e7e0d4;
+      --shadow: 0 18px 50px rgba(28, 25, 23, 0.08);
+      --radius: 18px;
+      --max: 1080px;
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #111111;
-        --surface: #1a1a1a;
-        --text: #f5f5f5;
-        --muted: #a3a3a3;
-        --accent: #60a5fa;
-        --border: #2e2e2e;
+        --bg: #121110;
+        --bg-accent: #1c1a18;
+        --surface: #1a1816;
+        --text: #f5f5f4;
+        --muted: #a8a29e;
+        --accent: #93c5fd;
+        --accent-soft: #1e293b;
+        --border: #2e2a27;
+        --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
       }
     }
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: var(--text);
       background: var(--bg);
-      line-height: 1.65;
+      line-height: 1.6;
     }
-    header, main, footer {
-      max-width: 720px;
-      margin: 0 auto;
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 1.25rem; }
+
+    /* Nav */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      border-bottom: 1px solid var(--border);
     }
-    header {
-      padding-top: 2.5rem;
-      padding-bottom: 1rem;
-    }
-    .badge {
-      display: inline-block;
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 0.75rem;
-    }
-    h1 {
-      font-size: clamp(2rem, 5vw, 2.75rem);
-      line-height: 1.15;
-      margin: 0 0 0.75rem;
-      letter-spacing: -0.03em;
-    }
-    .lead {
-      color: var(--muted);
-      font-size: 1.1rem;
-      margin: 0;
-    }
-    main { padding-bottom: 3rem; }
-    section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.5rem 1.25rem;
-      margin-top: 1rem;
-    }
-    h2 {
-      font-size: 1.05rem;
-      margin: 0 0 0.75rem;
-    }
-    p { margin: 0 0 1rem; color: var(--muted); }
-    p:last-child { margin-bottom: 0; }
-    ul {
-      margin: 0;
-      padding-left: 1.2rem;
-      color: var(--muted);
-    }
-    li { margin: 0.35rem 0; }
-    .platforms {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-    }
-    .platforms span {
-      font-size: 0.85rem;
-      padding: 0.35rem 0.65rem;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      color: var(--text);
-    }
-    .stores {
-      display: grid;
-      gap: 0.75rem;
-      margin-top: 0.5rem;
-    }
-    .store {
+    .nav-inner {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      padding: 0.85rem 1rem;
-      border: 1px dashed var(--border);
-      border-radius: 12px;
-      color: var(--muted);
-      font-size: 0.95rem;
+      padding: 0.85rem 0;
     }
-    .store strong { color: var(--text); }
-    .soon {
-      font-size: 0.8rem;
-      font-weight: 600;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .brand img {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.92rem;
+    }
+    .nav-links a { color: var(--muted); text-decoration: none; font-weight: 500; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+    /* Hero */
+    .hero {
+      padding: 3.5rem 0 2rem;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, var(--accent-soft), transparent),
+        var(--bg);
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 2.5rem;
+      align-items: center;
+    }
+    @media (max-width: 820px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+    .eyebrow {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
       color: var(--accent);
-      white-space: nowrap;
+      margin-bottom: 0.85rem;
     }
-    nav.links {
+    h1 {
+      font-size: clamp(2.4rem, 6vw, 3.6rem);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      margin: 0 0 1rem;
+    }
+    .hero p.lead {
+      font-size: 1.15rem;
+      color: var(--muted);
+      margin: 0 0 1.75rem;
+      max-width: 34rem;
+    }
+    .cta-row {
       display: flex;
       flex-wrap: wrap;
       gap: 0.75rem;
-      margin-top: 0.5rem;
+      margin-bottom: 1.25rem;
     }
-    a.button {
-      display: inline-block;
-      padding: 0.7rem 1.1rem;
-      border-radius: 10px;
-      text-decoration: none;
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.25rem;
+      border-radius: 12px;
       font-weight: 600;
       font-size: 0.95rem;
+      text-decoration: none;
       border: 1px solid var(--border);
       color: var(--text);
+      background: var(--surface);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    a.button.primary {
+    .btn:hover { text-decoration: none; transform: translateY(-1px); box-shadow: var(--shadow); }
+    .btn-primary {
       background: var(--accent);
       border-color: var(--accent);
       color: #fff;
     }
-    footer {
-      padding-bottom: 2.5rem;
-      color: var(--muted);
-      font-size: 0.9rem;
-      text-align: center;
+    @media (prefers-color-scheme: dark) {
+      .btn-primary { color: #0f172a; background: var(--accent); }
     }
-    footer a { color: var(--accent); }
-    .ar {
+    .platform-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+    .platform-chips span {
+      font-size: 0.82rem;
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+    }
+    .hero-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 6px);
+      box-shadow: var(--shadow);
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, transparent), transparent 55%);
+      pointer-events: none;
+    }
+    .mock-screen {
+      aspect-ratio: 4 / 3;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background:
+        linear-gradient(180deg, var(--bg-accent), var(--surface)),
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 27px,
+          color-mix(in srgb, var(--border) 60%, transparent) 28px
+        );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .mock-logo {
+      width: 88px;
+      height: 88px;
+      border-radius: 22px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    }
+    .mock-caption {
+      margin-top: 0.85rem;
+      text-align: center;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    /* Sections */
+    section.block { padding: 2.5rem 0; }
+    .section-head {
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 2rem;
+    }
+    .section-head h2 {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.02em;
+    }
+    .section-head p { margin: 0; color: var(--muted); }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .feature {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+    }
+    .feature-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: var(--accent-soft);
+      font-size: 1.25rem;
+      margin-bottom: 0.85rem;
+    }
+    .feature h3 {
+      margin: 0 0 0.4rem;
+      font-size: 1.05rem;
+    }
+    .feature p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    /* Download */
+    .download-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 4px);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 1rem;
+    }
+    .store-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 1.1rem;
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+    }
+    .store-row strong { display: block; }
+    .store-row small { color: var(--muted); }
+    .badge-soon {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent);
+      white-space: nowrap;
+      padding: 0.35rem 0.65rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+    }
+
+    /* Arabic */
+    .ar-block {
       direction: rtl;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Arabic", Tahoma, sans-serif;
+      background: var(--bg-accent);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
+    .ar-block ul { padding-right: 1.2rem; padding-left: 0; }
+
+    footer {
+      padding: 2rem 0 2.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    footer nav {
+      position: static;
+      background: none;
+      border: none;
+      backdrop-filter: none;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    footer nav a { color: var(--muted); font-weight: 500; }
   </style>
 </head>
 <body>
-  <header>
-    <div class="badge">Note-taking app</div>
-    <h1>Eleganote</h1>
-    <p class="lead">
-      Elegant notes with handwriting, shapes, audio, and optional cloud backup — designed for iOS, Android, macOS, Windows, and Linux.
-    </p>
+  <nav>
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top">
+        <img src="assets/icon-512.png" alt="Eleganote icon" width="36" height="36">
+        Eleganote
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#download">Download</a>
+        <a href="#arabic">العربية</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">Note-taking · Canvas · Audio</span>
+        <h1>Notes that feel as natural as paper.</h1>
+        <p class="lead">
+          Eleganote combines handwriting, shapes, rich text, and audio in one elegant workspace.
+          Your notes stay on your device by default — with optional backup to Google Drive or Dropbox.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#download">Get the app</a>
+          <a class="btn" href="privacy.html">Privacy Policy</a>
+        </div>
+        <div class="platform-chips">
+          <span>iOS</span>
+          <span>Android</span>
+          <span>macOS</span>
+          <span>Windows</span>
+          <span>Linux</span>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="mock-screen">
+          <img class="mock-logo" src="assets/icon-512.png" alt="Eleganote">
+        </div>
+        <p class="mock-caption">Write, draw, organize — all in one place.</p>
+      </div>
+    </div>
   </header>
 
-  <main>
-    <section>
-      <h2>What is Eleganote?</h2>
-      <p>
-        Eleganote is a note-taking application for writing, drawing, organizing documents, and keeping your work on your device by default.
-        You can optionally connect Google Drive or Dropbox to store encrypted backup ZIP files in a dedicated folder named
-        <strong>Eleganote Backups</strong>.
-      </p>
-      <ul>
-        <li>Handwriting, shapes, text, tables, and images</li>
-        <li>Audio notes with optional recording</li>
-        <li>Local-first storage — your notes stay on your device</li>
-        <li>Optional cloud backup to Google Drive or Dropbox</li>
-        <li>Export and share notes as PDF or backup archives</li>
-      </ul>
-    </section>
-
-    <section>
-      <h2>Platforms</h2>
-      <div class="platforms">
-        <span>iOS</span>
-        <span>Android</span>
-        <span>macOS</span>
-        <span>Windows</span>
-        <span>Linux</span>
+  <section class="block" id="features">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Everything you need to capture ideas</h2>
+        <p>Built for students, professionals, and anyone who thinks visually.</p>
       </div>
-    </section>
+      <div class="features">
+        <article class="feature">
+          <div class="feature-icon">✍️</div>
+          <h3>Handwriting &amp; drawing</h3>
+          <p>Smooth ink, shapes, connectors, and a flexible canvas for diagrams and sketches.</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon">📝</div>
+          <h3>Rich documents</h3>
+          <p>Text boxes, tables, images, folders, tags, and multi-page documents.</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon">🎙️</div>
+          <h3>Audio notes</h3>
+          <p>Record voice memos alongside your notes — stored locally on your device.</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon">🔒</div>
+          <h3>Local-first privacy</h3>
+          <p>No ads, no tracking SDKs. Your content stays on your device unless you choose to back up.</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon">☁️</div>
+          <h3>Optional cloud backup</h3>
+          <p>Connect Google Drive or Dropbox to save encrypted ZIP backups in <strong>Eleganote Backups</strong>.</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon">📤</div>
+          <h3>Export &amp; share</h3>
+          <p>Export notes as PDF or backup archives and share them when you need to.</p>
+        </article>
+      </div>
+    </div>
+  </section>
 
-    <section>
-      <h2>Download</h2>
-      <p>Store listings will be published when the app is ready for public release.</p>
-      <div class="stores">
-        <div class="store">
-          <span><strong>Apple App Store</strong></span>
-          <span class="soon">Coming soon</span>
+  <section class="block" id="download">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Download Eleganote</h2>
+        <p>Available across desktop and mobile. Google Play listing is rolling out now.</p>
+      </div>
+      <div class="download-panel">
+        <div class="store-row">
+          <div>
+            <strong>Google Play</strong>
+            <small>Android phones &amp; tablets · Package: com.anasraad.eleganote</small>
+          </div>
+          <span class="badge-soon">Rolling out</span>
         </div>
-        <div class="store">
-          <span><strong>Google Play</strong></span>
-          <span class="soon">Coming soon</span>
+        <div class="store-row">
+          <div>
+            <strong>Apple App Store</strong>
+            <small>iPhone &amp; iPad</small>
+          </div>
+          <span class="badge-soon">Coming soon</span>
+        </div>
+        <div class="store-row">
+          <div>
+            <strong>Desktop</strong>
+            <small>macOS, Windows, and Linux builds</small>
+          </div>
+          <span class="badge-soon">Coming soon</span>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section>
-      <h2>Legal &amp; contact</h2>
-      <nav class="links">
-        <a class="button primary" href="privacy.html">Privacy Policy</a>
-        <a class="button" href="mailto:anasraad6888@gmail.com">Contact</a>
-      </nav>
-    </section>
-
-    <section class="ar">
-      <h2>ما هو Eleganote؟</h2>
-      <p>
-        تطبيق ملاحظات للكتابة والرسم وتنظيم المستندات. بياناتك تبقى على جهازك افتراضياً،
-        ويمكنك اختيارياً ربط Google Drive أو Dropbox لحفظ نسخ احتياطية في مجلد
-        <strong>Eleganote Backups</strong>.
-      </p>
-    </section>
-  </main>
+  <section class="block ar-block" id="arabic" lang="ar" dir="rtl">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>ملاحظات أنيقة بلمسة طبيعية</h2>
+        <p>Eleganote تطبيق للكتابة والرسم وتنظيم المستندات — بياناتك على جهازك افتراضياً.</p>
+      </div>
+      <div class="features">
+        <article class="feature">
+          <div class="feature-icon">✍️</div>
+          <h3>كتابة يدوية ورسم</h3>
+          <p>حبر سلس، أشكال، وموصلات على لوحة مرنة.</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon">🔒</div>
+          <h3>خصوصية محلية</h3>
+          <p>بدون إعلانات أو تتبع. محتواك يبقى على جهازك.</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon">☁️</div>
+          <h3>نسخ احتياطي اختياري</h3>
+          <p>ربط Google Drive أو Dropbox لحفظ نسخ في مجلد Eleganote Backups.</p>
+        </article>
+      </div>
+    </div>
+  </section>
 
   <footer>
-    © 2026 Eleganote · <a href="privacy.html">Privacy Policy</a>
+    <div class="wrap">
+      <nav>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="account-deletion.html">Account deletion</a>
+        <a href="mailto:anasraad6888@gmail.com">anasraad6888@gmail.com</a>
+      </nav>
+      <p>© 2026 Eleganote · Developed by Anas Raad</p>
+    </div>
   </footer>
 </body>
 </html>
