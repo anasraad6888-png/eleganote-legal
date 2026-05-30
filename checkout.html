@@ -155,8 +155,8 @@
         Pay securely with Gammal Tech. After payment, return to the app and tap
         <strong>Refresh status</strong>.
         <span class="hint">
-          Card: opens a secure card form. Wallet (EGP): requires a free Gammal account.
-          Gammal may ask for your email once for payment verification — separate from your Eleganote / Google sign-in.
+          Two steps for card: (1) email verification via Gammal, (2) enter card details.
+          Wallet (EGP) uses your Gammal balance. Allow pop-ups if Safari blocks the payment window.
         </span>
       </p>
 
@@ -295,8 +295,16 @@
     async function ensureGammalLogin(message) {
       if (GammalTech.isLoggedIn()) return true;
       setStatus(message, 'info');
-      await GammalTech.login();
+      try {
+        await GammalTech.login();
+      } catch (err) {
+        console.warn('Gammal login', err);
+      }
       return GammalTech.isLoggedIn();
+    }
+
+    function startPaymentWatchdog(onTimeout, ms = 12000) {
+      return setTimeout(onTimeout, ms);
     }
 
     async function payWithCard() {
@@ -304,15 +312,40 @@
       paying = true;
       document.getElementById('payCardBtn').disabled = true;
       document.getElementById('payWalletBtn').disabled = true;
-      setStatus('Opening secure card form…', 'info');
 
       try {
-        // Card first — no pre-login. Gammal opens the card popup directly when possible.
+        if (
+          !(await ensureGammalLogin(
+            'Step 1/2: enter your email (required by Gammal — not your Eleganote account).',
+          ))
+        ) {
+          setStatus('Cancelled. Tap the button to try again.', 'warn');
+          resetPayButtons();
+          return;
+        }
+
+        setStatus(
+          'Step 2/2: opening card form… If nothing appears, allow pop-ups for this site in Safari.',
+          'info',
+        );
+
+        let settled = false;
+        const watchdog = startPaymentWatchdog(() => {
+          if (settled) return;
+          setStatus(
+            'Card form did not open. Safari → Settings → allow pop-ups for this page, then retry.',
+            'err',
+          );
+          resetPayButtons();
+        });
+
         GammalTech.payCard(
           session.priceUsd,
           'USD',
           session.description,
           async (payment) => {
+            settled = true;
+            clearTimeout(watchdog);
             try {
               payment.currency = 'USD';
               await handlePaymentDelivery(payment);
@@ -326,13 +359,6 @@
         );
       } catch (err) {
         console.error(err);
-        if (
-          !GammalTech.isLoggedIn() &&
-          (await ensureGammalLogin('Email verification required — enter your email, then the card form opens.'))
-        ) {
-          payWithCard();
-          return;
-        }
         setStatus(err.message || 'Card payment failed.', 'err');
         resetPayButtons();
       }
@@ -343,19 +369,33 @@
       paying = true;
       document.getElementById('payCardBtn').disabled = true;
       document.getElementById('payWalletBtn').disabled = true;
-      setStatus('Opening Gammal Wallet…', 'info');
 
       try {
-        if (!(await ensureGammalLogin('Sign in to Gammal Wallet to pay in EGP.'))) {
-          setStatus('Gammal Wallet requires a free Gammal account.', 'warn');
+        if (
+          !(await ensureGammalLogin(
+            'Sign in to Gammal Wallet with your email to pay in EGP.',
+          ))
+        ) {
+          setStatus('Cancelled. Tap the button to try again.', 'warn');
           resetPayButtons();
           return;
         }
+
+        setStatus('Opening Gammal Wallet… Allow pop-ups if prompted.', 'info');
+
+        let settled = false;
+        const watchdog = startPaymentWatchdog(() => {
+          if (settled) return;
+          setStatus('Wallet did not open. Allow pop-ups and try again.', 'err');
+          resetPayButtons();
+        });
 
         GammalTech.pay(
           session.priceEgp,
           session.description,
           async (payment) => {
+            settled = true;
+            clearTimeout(watchdog);
             try {
               payment.currency = 'EGP';
               await handlePaymentDelivery(payment);
