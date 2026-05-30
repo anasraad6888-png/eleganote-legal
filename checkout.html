@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Eleganote Premium — Checkout</title>
-  <meta name="description" content="Complete your Eleganote Premium subscription via Gammal Tech." />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <script src="https://api.gammal.tech/sdk-web.js"></script>
   <style>
     :root {
@@ -79,6 +79,13 @@
     .plan-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
     .plan-price { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
     .plan-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .step-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin: -4px 0 12px;
+      line-height: 1.5;
+    }
+    .step-note.ok { color: var(--success); }
     .hint {
       display: block;
       margin-top: 10px;
@@ -155,8 +162,8 @@
         Pay securely with Gammal Tech. After payment, return to the app and tap
         <strong>Refresh status</strong>.
         <span class="hint">
-          Two steps for card: (1) email verification via Gammal, (2) enter card details.
-          Wallet (EGP) uses your Gammal balance. Allow pop-ups if Safari blocks the payment window.
+          Safari blocks a second pop-up unless you tap again. After email verification,
+          tap <strong>Step 2</strong> to open the card form.
         </span>
       </p>
 
@@ -166,8 +173,11 @@
         <div class="plan-note" id="planPriceEgp"></div>
       </div>
 
-      <button class="btn btn-primary" id="payCardBtn">Pay $5 with card (USD)</button>
-      <button class="btn btn-secondary" id="payWalletBtn">Pay with Gammal Wallet (EGP — login required)</button>
+      <button class="btn btn-secondary" id="verifyBtn">Step 1: Verify email (Gammal)</button>
+      <p class="step-note" id="verifyStatus">One-time email check — not your Eleganote / Google account.</p>
+
+      <button class="btn btn-primary" id="payCardBtn" disabled>Step 2: Pay with card (USD)</button>
+      <button class="btn btn-secondary" id="payWalletBtn" disabled>Pay with Gammal Wallet (EGP)</button>
 
       <div class="status info" id="statusBox"></div>
     </div>
@@ -237,23 +247,35 @@
       document.getElementById('planPriceEgp').textContent =
         `or ${body.priceEgp} EGP via Gammal Wallet`;
       document.getElementById('payCardBtn').textContent =
-        `Pay $${body.priceUsd.toFixed(2)} with card (USD)`;
+        `Step 2: Pay $${body.priceUsd.toFixed(2)} with card (USD)`;
 
+      updateAuthUi();
       show('checkout');
       await recoverPendingPayments();
     }
 
+    function normalizePayment(payment, currency) {
+      return {
+        id: payment.id ?? payment.txn ?? payment.payment_id,
+        amount: payment.amount,
+        currency: currency || payment.currency || 'USD',
+      };
+    }
+
     async function fulfillOnServer(payment) {
       const sid = sessionStorage.getItem('gammal_checkout_session') || sessionId;
-      const paymentId = payment.id ?? payment.payment_id;
+      const paymentId = payment.id ?? payment.txn ?? payment.payment_id;
+      if (!paymentId) {
+        throw new Error('Missing payment reference from Gammal.');
+      }
       const res = await fetch(`${apiBase}/v1/gammal/fulfill`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: sid,
-          gammalPaymentId: paymentId,
+          gammalPaymentId: String(paymentId),
           amount: payment.amount,
-          currency: payment.currency || (payment.amount >= 100 ? 'EGP' : 'USD'),
+          currency: payment.currency || 'USD',
         }),
       });
 
@@ -264,13 +286,148 @@
       return body;
     }
 
-    async function handlePaymentDelivery(payment) {
+    async function handlePaymentDelivery(payment, currency) {
+      const normalized = normalizePayment(payment, currency);
       setStatus('Activating Premium…', 'info');
-      await fulfillOnServer(payment);
-      const paymentId = payment.id ?? payment.payment_id;
-      await GammalTech.payment.confirmDelivery(paymentId);
+      await fulfillOnServer(normalized);
       show('success');
     }
+
+    function updateAuthUi() {
+      const loggedIn = GammalTech.isLoggedIn();
+      const verifyBtn = document.getElementById('verifyBtn');
+      const verifyStatus = document.getElementById('verifyStatus');
+      const payCardBtn = document.getElementById('payCardBtn');
+      const payWalletBtn = document.getElementById('payWalletBtn');
+
+      if (loggedIn) {
+        verifyBtn.textContent = 'Step 1: Email verified ✓';
+        verifyBtn.disabled = true;
+        verifyStatus.textContent = 'Now tap Step 2 to open the card form (Safari requires a new tap).';
+        verifyStatus.className = 'step-note ok';
+        payCardBtn.disabled = paying;
+        payWalletBtn.disabled = paying;
+      } else {
+        verifyBtn.textContent = 'Step 1: Verify email (Gammal)';
+        verifyBtn.disabled = paying;
+        verifyStatus.textContent = 'One-time email check — not your Eleganote / Google account.';
+        verifyStatus.className = 'step-note';
+        payCardBtn.disabled = true;
+        payWalletBtn.disabled = true;
+      }
+    }
+
+    function resetPayButtons() {
+      paying = false;
+      updateAuthUi();
+    }
+
+    function paymentErrorMessage(err) {
+      const msg = err?.message || String(err);
+      if (msg.includes('Popup blocked')) {
+        return 'Safari blocked the payment window. Safari → Settings → Websites → Pop-up Windows → Allow for this site.';
+      }
+      if (msg.includes('cancelled') || msg.includes('canceled')) {
+        return 'Payment cancelled. Tap Step 2 to try again.';
+      }
+      if (msg.includes('Not logged in')) {
+        return 'Complete Step 1 — verify your email first.';
+      }
+      return msg;
+    }
+
+    async function verifyEmail() {
+      if (paying || GammalTech.isLoggedIn()) {
+        updateAuthUi();
+        return;
+      }
+      paying = true;
+      updateAuthUi();
+      setStatus('Opening Gammal email verification…', 'info');
+      try {
+        await GammalTech.login();
+        if (GammalTech.isLoggedIn()) {
+          setStatus('Email verified. Now tap Step 2 to pay with your card.', 'ok');
+        } else {
+          setStatus('Verification cancelled. Tap Step 1 to try again.', 'warn');
+        }
+      } catch (err) {
+        console.error(err);
+        setStatus(paymentErrorMessage(err), 'err');
+      } finally {
+        paying = false;
+        updateAuthUi();
+      }
+    }
+
+    async function payWithCard() {
+      if (paying || !session) return;
+      if (!GammalTech.isLoggedIn()) {
+        setStatus('Complete Step 1 first — verify your email.', 'warn');
+        return;
+      }
+
+      paying = true;
+      updateAuthUi();
+      setStatus('Opening card form…', 'info');
+
+      try {
+        let captured = null;
+        await GammalTech.payCard(
+          session.priceUsd,
+          'USD',
+          session.description,
+          (payment) => {
+            captured = normalizePayment(payment, 'USD');
+          },
+        );
+        if (captured) {
+          await handlePaymentDelivery(captured, 'USD');
+        } else {
+          setStatus('Payment cancelled.', 'warn');
+        }
+      } catch (err) {
+        console.error(err);
+        setStatus(paymentErrorMessage(err), 'err');
+      } finally {
+        resetPayButtons();
+      }
+    }
+
+    async function payWithWallet() {
+      if (paying || !session) return;
+      if (!GammalTech.isLoggedIn()) {
+        setStatus('Complete Step 1 first — verify your email.', 'warn');
+        return;
+      }
+
+      paying = true;
+      updateAuthUi();
+      setStatus('Opening Gammal Wallet…', 'info');
+
+      try {
+        let captured = null;
+        await GammalTech.pay(
+          session.priceEgp,
+          session.description,
+          (payment) => {
+            captured = normalizePayment(payment, 'EGP');
+          },
+        );
+        if (captured) {
+          await handlePaymentDelivery(captured, 'EGP');
+        } else {
+          setStatus('Payment cancelled.', 'warn');
+        }
+      } catch (err) {
+        console.error(err);
+        setStatus(paymentErrorMessage(err), 'err');
+      } finally {
+        resetPayButtons();
+      }
+    }
+
+    document.getElementById('verifyBtn').addEventListener('click', verifyEmail);
 
     async function recoverPendingPayments() {
       if (!window.GammalTech?.isLoggedIn?.()) return;
@@ -278,139 +435,11 @@
       try {
         const pending = await GammalTech.payment.settlePending();
         for (const payment of pending) {
-          await handlePaymentDelivery(payment);
+          await handlePaymentDelivery(payment, payment.currency || 'USD');
           return;
         }
       } catch (err) {
         console.warn('settlePending', err);
-      }
-    }
-
-    function resetPayButtons() {
-      paying = false;
-      document.getElementById('payCardBtn').disabled = false;
-      document.getElementById('payWalletBtn').disabled = false;
-    }
-
-    async function ensureGammalLogin(message) {
-      if (GammalTech.isLoggedIn()) return true;
-      setStatus(message, 'info');
-      try {
-        await GammalTech.login();
-      } catch (err) {
-        console.warn('Gammal login', err);
-      }
-      return GammalTech.isLoggedIn();
-    }
-
-    function startPaymentWatchdog(onTimeout, ms = 12000) {
-      return setTimeout(onTimeout, ms);
-    }
-
-    async function payWithCard() {
-      if (paying || !session) return;
-      paying = true;
-      document.getElementById('payCardBtn').disabled = true;
-      document.getElementById('payWalletBtn').disabled = true;
-
-      try {
-        if (
-          !(await ensureGammalLogin(
-            'Step 1/2: enter your email (required by Gammal — not your Eleganote account).',
-          ))
-        ) {
-          setStatus('Cancelled. Tap the button to try again.', 'warn');
-          resetPayButtons();
-          return;
-        }
-
-        setStatus(
-          'Step 2/2: opening card form… If nothing appears, allow pop-ups for this site in Safari.',
-          'info',
-        );
-
-        let settled = false;
-        const watchdog = startPaymentWatchdog(() => {
-          if (settled) return;
-          setStatus(
-            'Card form did not open. Safari → Settings → allow pop-ups for this page, then retry.',
-            'err',
-          );
-          resetPayButtons();
-        });
-
-        GammalTech.payCard(
-          session.priceUsd,
-          'USD',
-          session.description,
-          async (payment) => {
-            settled = true;
-            clearTimeout(watchdog);
-            try {
-              payment.currency = 'USD';
-              await handlePaymentDelivery(payment);
-            } catch (err) {
-              console.error(err);
-              setStatus(err.message || 'Could not activate Premium.', 'err');
-            } finally {
-              resetPayButtons();
-            }
-          },
-        );
-      } catch (err) {
-        console.error(err);
-        setStatus(err.message || 'Card payment failed.', 'err');
-        resetPayButtons();
-      }
-    }
-
-    async function payWithWallet() {
-      if (paying || !session) return;
-      paying = true;
-      document.getElementById('payCardBtn').disabled = true;
-      document.getElementById('payWalletBtn').disabled = true;
-
-      try {
-        if (
-          !(await ensureGammalLogin(
-            'Sign in to Gammal Wallet with your email to pay in EGP.',
-          ))
-        ) {
-          setStatus('Cancelled. Tap the button to try again.', 'warn');
-          resetPayButtons();
-          return;
-        }
-
-        setStatus('Opening Gammal Wallet… Allow pop-ups if prompted.', 'info');
-
-        let settled = false;
-        const watchdog = startPaymentWatchdog(() => {
-          if (settled) return;
-          setStatus('Wallet did not open. Allow pop-ups and try again.', 'err');
-          resetPayButtons();
-        });
-
-        GammalTech.pay(
-          session.priceEgp,
-          session.description,
-          async (payment) => {
-            settled = true;
-            clearTimeout(watchdog);
-            try {
-              payment.currency = 'EGP';
-              await handlePaymentDelivery(payment);
-            } catch (err) {
-              console.error(err);
-              setStatus(err.message || 'Could not activate Premium.', 'err');
-            } finally {
-              resetPayButtons();
-            }
-          },
-        );
-      } catch (err) {
-        console.error(err);
-        setStatus(err.message || 'Wallet payment failed.', 'err');
-        resetPayButtons();
       }
     }
 
