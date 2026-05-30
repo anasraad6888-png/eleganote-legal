@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eleganote Premium — Checkout</title>
+  <meta name="description" content="Complete your Eleganote Premium subscription via Gammal Tech." />
+  <script src="https://api.gammal.tech/sdk-web.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --success: #22c55e;
+      --error: #ef4444;
+      --warn: #f59e0b;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --border: rgba(15, 23, 42, 0.1);
+        --text: #0f172a;
+        --muted: #64748b;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(ellipse at top, rgba(99, 102, 241, 0.12), transparent 55%), var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .shell {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
+    }
+    .logo {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .sub {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .plan-box {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
+      background: rgba(99, 102, 241, 0.06);
+    }
+    .plan-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+    .plan-price { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+    .plan-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.12s ease;
+      margin-bottom: 10px;
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn:not(:disabled):active { transform: scale(0.98); }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:not(:disabled):hover { background: var(--accent-hover); }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .status {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      display: none;
+    }
+    .status.show { display: block; }
+    .status.info { background: rgba(99, 102, 241, 0.12); color: var(--text); }
+    .status.ok { background: rgba(34, 197, 94, 0.12); color: var(--success); }
+    .status.err { background: rgba(239, 68, 68, 0.12); color: var(--error); }
+    .status.warn { background: rgba(245, 158, 11, 0.12); color: var(--warn); }
+    .hidden { display: none !important; }
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 24px auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div id="loading">
+      <div class="logo">Eleganote</div>
+      <h1>Premium Checkout</h1>
+      <p class="sub">Loading your subscription session…</p>
+      <div class="spinner"></div>
+    </div>
+
+    <div id="checkout" class="hidden">
+      <div class="logo">Eleganote</div>
+      <h1>Premium Checkout</h1>
+      <p class="sub">Pay securely with Gammal Tech. After payment, return to the app and tap <strong>Refresh status</strong>.</p>
+
+      <div class="plan-box">
+        <div class="plan-title" id="planTitle">—</div>
+        <div class="plan-price" id="planPriceUsd">—</div>
+        <div class="plan-note" id="planPriceEgp"></div>
+      </div>
+
+      <button class="btn btn-primary" id="payCardBtn">Pay with card (USD)</button>
+      <button class="btn btn-secondary" id="payWalletBtn">Pay with Gammal Wallet (EGP)</button>
+
+      <div class="status info" id="statusBox"></div>
+    </div>
+
+    <div id="success" class="hidden">
+      <div class="logo">Eleganote</div>
+      <h1>Payment complete</h1>
+      <p class="sub">Premium is active. Close this tab and open Eleganote, then tap <strong>Refresh status</strong> in Profile.</p>
+      <div class="status ok show">Thank you for subscribing.</div>
+    </div>
+
+    <div id="error" class="hidden">
+      <div class="logo">Eleganote</div>
+      <h1>Checkout unavailable</h1>
+      <p class="sub" id="errorMessage">This session is invalid or expired.</p>
+      <div class="status err show">Open Eleganote → Profile → Premium and try again.</div>
+    </div>
+
+    <p class="footer">Secured by Gammal Tech · Project #157</p>
+  </div>
+
+  <script>
+    const DEFAULT_API = 'https://eleganote-subscription.onrender.com';
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session');
+    const apiBase = (params.get('api') || DEFAULT_API).replace(/\/$/, '');
+
+    let session = null;
+    let paying = false;
+
+    function show(id) {
+      ['loading', 'checkout', 'success', 'error'].forEach((key) => {
+        document.getElementById(key).classList.toggle('hidden', key !== id);
+      });
+    }
+
+    function setStatus(message, kind = 'info') {
+      const box = document.getElementById('statusBox');
+      box.textContent = message;
+      box.className = 'status show ' + kind;
+    }
+
+    function showFatal(message) {
+      document.getElementById('errorMessage').textContent = message;
+      show('error');
+    }
+
+    async function loadSession() {
+      if (!sessionId) {
+        showFatal('Missing checkout session. Start checkout from the Eleganote app.');
+        return;
+      }
+
+      sessionStorage.setItem('gammal_checkout_session', sessionId);
+
+      const res = await fetch(`${apiBase}/v1/checkout/session/${encodeURIComponent(sessionId)}`);
+      const body = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        showFatal(body.error || `Session error (${res.status})`);
+        return;
+      }
+
+      session = body;
+      document.getElementById('planTitle').textContent = body.description;
+      document.getElementById('planPriceUsd').textContent = `$${body.priceUsd.toFixed(2)} USD`;
+      document.getElementById('planPriceEgp').textContent =
+        `or ${body.priceEgp} EGP via Gammal Wallet`;
+
+      show('checkout');
+      await recoverPendingPayments();
+    }
+
+    async function fulfillOnServer(payment) {
+      const sid = sessionStorage.getItem('gammal_checkout_session') || sessionId;
+      const paymentId = payment.id ?? payment.payment_id;
+      const res = await fetch(`${apiBase}/v1/gammal/fulfill`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sid,
+          gammalPaymentId: paymentId,
+          amount: payment.amount,
+          currency: payment.currency || (payment.amount >= 100 ? 'EGP' : 'USD'),
+        }),
+      });
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok && !body.alreadyFulfilled) {
+        throw new Error(body.error || `Fulfillment failed (${res.status})`);
+      }
+      return body;
+    }
+
+    async function handlePaymentDelivery(payment) {
+      setStatus('Activating Premium…', 'info');
+      await fulfillOnServer(payment);
+      const paymentId = payment.id ?? payment.payment_id;
+      await GammalTech.payment.confirmDelivery(paymentId);
+      show('success');
+    }
+
+    async function recoverPendingPayments() {
+      if (!window.GammalTech?.isLoggedIn?.()) return;
+
+      try {
+        const pending = await GammalTech.payment.settlePending();
+        for (const payment of pending) {
+          await handlePaymentDelivery(payment);
+          return;
+        }
+      } catch (err) {
+        console.warn('settlePending', err);
+      }
+    }
+
+    async function ensureGammalLogin() {
+      if (GammalTech.isLoggedIn()) return true;
+      setStatus('Sign in to Gammal Tech to continue…', 'info');
+      await GammalTech.login();
+      return GammalTech.isLoggedIn();
+    }
+
+    async function payWithCard() {
+      if (paying || !session) return;
+      paying = true;
+      document.getElementById('payCardBtn').disabled = true;
+      document.getElementById('payWalletBtn').disabled = true;
+      setStatus('Opening secure card form…', 'info');
+
+      try {
+        if (!(await ensureGammalLogin())) {
+          setStatus('Login required to pay.', 'warn');
+          return;
+        }
+
+        GammalTech.payCard(
+          session.priceUsd,
+          'USD',
+          session.description,
+          async (payment) => {
+            try {
+              payment.currency = 'USD';
+              await handlePaymentDelivery(payment);
+            } catch (err) {
+              console.error(err);
+              setStatus(err.message || 'Could not activate Premium.', 'err');
+            } finally {
+              paying = false;
+              document.getElementById('payCardBtn').disabled = false;
+              document.getElementById('payWalletBtn').disabled = false;
+            }
+          },
+        );
+      } catch (err) {
+        console.error(err);
+        setStatus(err.message || 'Card payment failed.', 'err');
+        paying = false;
+        document.getElementById('payCardBtn').disabled = false;
+        document.getElementById('payWalletBtn').disabled = false;
+      }
+    }
+
+    async function payWithWallet() {
+      if (paying || !session) return;
+      paying = true;
+      document.getElementById('payCardBtn').disabled = true;
+      document.getElementById('payWalletBtn').disabled = true;
+      setStatus('Opening Gammal Wallet…', 'info');
+
+      try {
+        if (!(await ensureGammalLogin())) {
+          setStatus('Login required to pay.', 'warn');
+          return;
+        }
+
+        GammalTech.pay(
+          session.priceEgp,
+          session.description,
+          async (payment) => {
+            try {
+              payment.currency = 'EGP';
+              await handlePaymentDelivery(payment);
+            } catch (err) {
+              console.error(err);
+              setStatus(err.message || 'Could not activate Premium.', 'err');
+            } finally {
+              paying = false;
+              document.getElementById('payCardBtn').disabled = false;
+              document.getElementById('payWalletBtn').disabled = false;
+            }
+          },
+        );
+      } catch (err) {
+        console.error(err);
+        setStatus(err.message || 'Wallet payment failed.', 'err');
+        paying = false;
+        document.getElementById('payCardBtn').disabled = false;
+        document.getElementById('payWalletBtn').disabled = false;
+      }
+    }
+
+    document.getElementById('payCardBtn').addEventListener('click', payWithCard);
+    document.getElementById('payWalletBtn').addEventListener('click', payWithWallet);
+
+    if (!window.GammalTech) {
+      showFatal('Gammal Tech SDK failed to load. Check your connection and reload.');
+    } else {
+      loadSession().catch((err) => {
+        console.error(err);
+        showFatal('Could not load checkout session.');
+      });
+    }
+  </script>
+</body>
+</html>
