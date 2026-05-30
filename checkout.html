@@ -79,6 +79,13 @@
     .plan-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
     .plan-price { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
     .plan-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .hint {
+      display: block;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
     .btn {
       width: 100%;
       border: none;
@@ -144,7 +151,14 @@
     <div id="checkout" class="hidden">
       <div class="logo">Eleganote</div>
       <h1>Premium Checkout</h1>
-      <p class="sub">Pay securely with Gammal Tech. After payment, return to the app and tap <strong>Refresh status</strong>.</p>
+      <p class="sub">
+        Pay securely with Gammal Tech. After payment, return to the app and tap
+        <strong>Refresh status</strong>.
+        <span class="hint">
+          Card: opens a secure card form. Wallet (EGP): requires a free Gammal account.
+          Gammal may ask for your email once for payment verification — separate from your Eleganote / Google sign-in.
+        </span>
+      </p>
 
       <div class="plan-box">
         <div class="plan-title" id="planTitle">—</div>
@@ -152,8 +166,8 @@
         <div class="plan-note" id="planPriceEgp"></div>
       </div>
 
-      <button class="btn btn-primary" id="payCardBtn">Pay with card (USD)</button>
-      <button class="btn btn-secondary" id="payWalletBtn">Pay with Gammal Wallet (EGP)</button>
+      <button class="btn btn-primary" id="payCardBtn">Pay $5 with card (USD)</button>
+      <button class="btn btn-secondary" id="payWalletBtn">Pay with Gammal Wallet (EGP — login required)</button>
 
       <div class="status info" id="statusBox"></div>
     </div>
@@ -222,6 +236,8 @@
       document.getElementById('planPriceUsd').textContent = `$${body.priceUsd.toFixed(2)} USD`;
       document.getElementById('planPriceEgp').textContent =
         `or ${body.priceEgp} EGP via Gammal Wallet`;
+      document.getElementById('payCardBtn').textContent =
+        `Pay $${body.priceUsd.toFixed(2)} with card (USD)`;
 
       show('checkout');
       await recoverPendingPayments();
@@ -270,9 +286,15 @@
       }
     }
 
-    async function ensureGammalLogin() {
+    function resetPayButtons() {
+      paying = false;
+      document.getElementById('payCardBtn').disabled = false;
+      document.getElementById('payWalletBtn').disabled = false;
+    }
+
+    async function ensureGammalLogin(message) {
       if (GammalTech.isLoggedIn()) return true;
-      setStatus('Sign in to Gammal Tech to continue…', 'info');
+      setStatus(message, 'info');
       await GammalTech.login();
       return GammalTech.isLoggedIn();
     }
@@ -285,11 +307,7 @@
       setStatus('Opening secure card form…', 'info');
 
       try {
-        if (!(await ensureGammalLogin())) {
-          setStatus('Login required to pay.', 'warn');
-          return;
-        }
-
+        // Card first — no pre-login. Gammal opens the card popup directly when possible.
         GammalTech.payCard(
           session.priceUsd,
           'USD',
@@ -302,18 +320,21 @@
               console.error(err);
               setStatus(err.message || 'Could not activate Premium.', 'err');
             } finally {
-              paying = false;
-              document.getElementById('payCardBtn').disabled = false;
-              document.getElementById('payWalletBtn').disabled = false;
+              resetPayButtons();
             }
           },
         );
       } catch (err) {
         console.error(err);
+        if (
+          !GammalTech.isLoggedIn() &&
+          (await ensureGammalLogin('Email verification required — enter your email, then the card form opens.'))
+        ) {
+          payWithCard();
+          return;
+        }
         setStatus(err.message || 'Card payment failed.', 'err');
-        paying = false;
-        document.getElementById('payCardBtn').disabled = false;
-        document.getElementById('payWalletBtn').disabled = false;
+        resetPayButtons();
       }
     }
 
@@ -325,8 +346,9 @@
       setStatus('Opening Gammal Wallet…', 'info');
 
       try {
-        if (!(await ensureGammalLogin())) {
-          setStatus('Login required to pay.', 'warn');
+        if (!(await ensureGammalLogin('Sign in to Gammal Wallet to pay in EGP.'))) {
+          setStatus('Gammal Wallet requires a free Gammal account.', 'warn');
+          resetPayButtons();
           return;
         }
 
@@ -341,18 +363,14 @@
               console.error(err);
               setStatus(err.message || 'Could not activate Premium.', 'err');
             } finally {
-              paying = false;
-              document.getElementById('payCardBtn').disabled = false;
-              document.getElementById('payWalletBtn').disabled = false;
+              resetPayButtons();
             }
           },
         );
       } catch (err) {
         console.error(err);
         setStatus(err.message || 'Wallet payment failed.', 'err');
-        paying = false;
-        document.getElementById('payCardBtn').disabled = false;
-        document.getElementById('payWalletBtn').disabled = false;
+        resetPayButtons();
       }
     }
 
