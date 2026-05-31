@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eleganote — Payment received</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --accent: #6366f1;
+      --success: #22c55e;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --border: rgba(15, 23, 42, 0.1);
+        --text: #0f172a;
+        --muted: #64748b;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(ellipse at top, rgba(99, 102, 241, 0.12), transparent 55%), var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .shell {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      text-align: center;
+    }
+    .logo {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    h1 { margin: 0 0 10px; font-size: 24px; }
+    p { margin: 0 0 14px; color: var(--muted); line-height: 1.55; font-size: 14px; }
+    .ok {
+      display: inline-block;
+      margin: 12px 0 18px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--success);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .session {
+      font-size: 11px;
+      color: var(--muted);
+      word-break: break-all;
+      margin-top: 16px;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="logo">Eleganote</div>
+    <h1>Thank you</h1>
+    <div class="ok">Payment received</div>
+    <p>
+      If you paid from the Eleganote app, close this tab and open Eleganote,
+      then go to <strong>Profile → Premium → Refresh status</strong>.
+    </p>
+    <p>Premium activation may take a minute while we confirm your payment.</p>
+    <p id="sessionLine" class="session hidden"></p>
+  </div>
+  <script>
+    const session = new URLSearchParams(window.location.search).get('session');
+    if (session) {
+      const line = document.getElementById('sessionLine');
+      line.textContent = 'Reference: ' + session;
+      line.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
